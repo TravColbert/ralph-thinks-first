@@ -24,11 +24,20 @@ while [[ $# -gt 0 ]]; do
       META_PROMPT_FILE="$2"
       shift 2
       ;;
+    -t|--task)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: -t, --task requires a filepath argument"
+        exit 1
+      fi
+      TASKS_FILE="$2"
+      shift 2
+      ;;
     -h|--help)
       echo "Usage: ./principal.sh [OPTIONS]"
       echo "  -p, --prompt 'TEXT'   Initial project idea to start the session."
       echo "  -m, --model 'MODEL'   Specify the Claude model to use (default: claude-3-sonnet-20240229)."
       echo "  -f, --file 'FILE'     Path to the meta-prompt file (default: META_PROMPT.md)."
+      echo "  -t, --task FILE       Path to the tasks file (default: TASKS.md)."
       echo "  -h, --help            Show this help message."
       exit 0
       ;;
