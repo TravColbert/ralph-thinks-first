@@ -17,7 +17,7 @@ The agents that are available to you are described in this JSON:
     "invocation": "./agent.sh -r MANAGER.md -t TASKS_FILE_NAME"
   },
   "Architect": {
-    "purpose": "Clearly defines the project's individual tasks in a task list. The task list is usually specified in a TASK_FILE_NAME. The TASK_FILE_NAME is usually TASKS.md. The architect is continually invoked until there are no more questions returned and it responds with **AGENT COMPLETE**.",
+    "purpose": "Clearly defines the project's individual tasks in a task list. The task list is usually specified in a TASK_FILE_NAME. The TASK_FILE_NAME is usually TASKS.md. The architect is continually invoked until it responds with **AGENT COMPLETE**.",
     "invocation": "./agent.sh -r ARCHITECT.md -t TASK_FILE_NAME --interactive"
   },
   "Coder": {
