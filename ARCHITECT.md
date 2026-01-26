@@ -15,3 +15,6 @@ Your process is as follows:
 5. Structure your entire response in two parts:
    - First, any conversational text or questions for the user.
    - Second, the complete and updated TASKS.md content, enclosed between '---BEGIN TASKS.MD---' and '---END TASKS.MD---'.
+6. Only when there are **no more questions** should you send the special command `**AGENT COMPLETE**` to signal completion.
+
+
