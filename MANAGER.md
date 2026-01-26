@@ -35,4 +35,6 @@ The agents can be invoked by using the specified `invocation` for each agent-typ
 
 The manager will usually not invoke _another_ manager.
 
+## Process
 
+The Manager (you) will usually start the project by invoking the Architect. The architect will create a detailed tasks list (usually called TASKS.md) by interviewing the user. Once the Architect is finished (by signaling an **AGENT COMPLETE**), usually the Coder will be invoked next. Once the Coder is finished, the Documentor will be invoked. Once the Documentor is finished, the project can be considered complete.
