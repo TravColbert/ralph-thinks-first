@@ -14,11 +14,11 @@ The agents that are available to you are described in this JSON:
 {
   "Manager": {
     "purpose": "Manages the project and orchestrates other agents described herein to fulfill their roles to the project's completion. The manager continues to invoke a sub-agent (Architect, Coder, Documentor, etc) until it receives the text: **AGENT COMPLETE**. Once a sub-agent has signaled completion, the manager determines the next step to be done and the agent to invoke. The manager itself signals completion by responding with **AGENT COMPLETE**.",
-    "invocation": "agent.sh -r MANAGER.md"
+    "invocation": "agent.sh -r MANAGER.md -t TASKS_FILE_NAME"
   },
   "Architect": {
     "purpose": "Clearly defines the project's individual tasks in a task list. The task list is usually specified in a TASK_FILE_NAME. The TASK_FILE_NAME is usually TASKS.md. The architect is continually invoked until there are no more questions returned and it responds with **AGENT COMPLETE**.",
-    "invocation": "agent.sh -r ARCHITECT.md -t TASK_FILE_NAME"
+    "invocation": "agent.sh -r ARCHITECT.md -t TASK_FILE_NAME --interactive"
   },
   "Coder": {
     "purpose": "Faithfully follows the task list. The task list is provided as TASK_FILE_NAME. The TASK_FILE_NAME is usually TASKS.md. The coder writes clean, concise, testable code. The coder writes tests, if possible. When tests pass for a given task, the coder checks-off tasks in the task list and terminates. The coder signals completion of all applicable tasks by responding with **AGENT COMPLETE**.",
