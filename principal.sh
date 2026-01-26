@@ -3,10 +3,10 @@ set -euo pipefail
 
 # --- Configuration ---
 # Default values for the script
-TASKS_FILE="TASKS.md"
+TASK_FILE="TASKS.md"
 MODEL="sonnet" # Default model, can be overridden
 INITIAL_PROMPT=""
-META_PROMPT_FILE="META_PROMPT.md"
+ROLE_FILE="ARCHITECT.md"
 
 # --- Argument Parsing ---
 # Handles command-line options to customize the script's behavior
@@ -20,8 +20,8 @@ while [[ $# -gt 0 ]]; do
       MODEL="$2"
       shift 2
       ;;
-    -f|--file)
-      META_PROMPT_FILE="$2"
+    -r|--role)
+      ROLE_FILE="$2"
       shift 2
       ;;
     -t|--task)
@@ -29,14 +29,14 @@ while [[ $# -gt 0 ]]; do
         echo "Error: -t, --task requires a filepath argument"
         exit 1
       fi
-      TASKS_FILE="$2"
+      TASK_FILE="$2"
       shift 2
       ;;
     -h|--help)
       echo "Usage: ./principal.sh [OPTIONS]"
       echo "  -p, --prompt 'TEXT'   Initial project idea to start the session."
       echo "  -m, --model 'MODEL'   Specify the Claude model to use (default: claude-3-sonnet-20240229)."
-      echo "  -f, --file 'FILE'     Path to the meta-prompt file (default: META_PROMPT.md)."
+      echo "  -r, --role 'FILE'     Path to the role file (default: ARCHITECT.md)."
       echo "  -t, --task FILE       Path to the tasks file (default: TASKS.md)."
       echo "  -h, --help            Show this help message."
       exit 0
@@ -49,19 +49,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 # --- Load Meta-Prompt ---
-if [[ ! -f "$META_PROMPT_FILE" ]]; then
-  echo "Error: Meta-prompt file not found at '$META_PROMPT_FILE'"
+if [[ ! -f "$ROLE_FILE" ]]; then
+  echo "Error: Meta-prompt file not found at '$ROLE_FILE'"
   exit 1
 fi
-META_PROMPT=$(cat "$META_PROMPT_FILE")
+META_PROMPT=$(cat "$ROLE_FILE")
 
 # --- Main Script Logic ---
 
 # Ensure the tasks file exists
-touch "$TASKS_FILE"
+touch "$TASK_FILE"
 
 echo "Starting interactive session with model '$MODEL'."
-echo "The generated task list will be saved to '$TASKS_FILE'."
+echo "The generated task list will be saved to '$TASK_FILE'."
 echo "Type 'exit' or 'quit' at any time to end the session."
 echo "----------------------------------------------------"
 
@@ -78,7 +78,7 @@ while true; do
 
   # Check for exit condition
   if [[ "$user_input" == "exit" || "$user_input" == "quit" ]]; then
-    echo "Session ended. Your final task list is in '$TASKS_FILE'."
+    echo "Session ended. Your final task list is in '$TASK_FILE'."
     break
   fi
 
@@ -86,7 +86,7 @@ while true; do
   # 1. Start with the meta-prompt
   # 2. Add the current content of the tasks file
   # 3. Add the user's latest input
-  current_tasks_content=$(cat "$TASKS_FILE")
+  current_tasks_content=$(cat "$TASK_FILE")
   full_prompt=$(cat <<-EOM
 $META_PROMPT
 
