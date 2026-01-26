@@ -116,13 +116,25 @@ for ((i=0; i<MAX_ITERATIONS; i++)); do
     break
   fi
 
-  # Append user turn to conversation history
-  if [[ -n "$user_input" ]]; then
+  # Append user turn to conversation history (skip for CODER — minimal context strategy)
+  if [[ -n "$user_input" && "$ROLE_FILE" != *"CODER"* ]]; then
     CONVERSATION_HISTORY+="USER: $user_input"$'\n'
   fi
 
   # --- Read current task file contents ---
   current_task_content=$(cat "$TASK_FILE")
+
+  # --- Build optional conversation history block ---
+  history_block=""
+  if [[ "$ROLE_FILE" != *"CODER"* && -n "$CONVERSATION_HISTORY" ]]; then
+    history_block=$(cat <<-HIST
+
+--- CONVERSATION HISTORY ---
+$CONVERSATION_HISTORY
+--- END CONVERSATION HISTORY ---
+HIST
+)
+  fi
 
   # --- Construct the full prompt for the LLM ---
   full_prompt=$(cat <<-EOM
@@ -133,10 +145,7 @@ TASK_FILE_NAME=$TASK_FILE
 --- CURRENT CONTENTS OF $TASK_FILE ---
 $current_task_content
 --- END CURRENT CONTENTS ---
-
---- CONVERSATION HISTORY ---
-$CONVERSATION_HISTORY
---- END CONVERSATION HISTORY ---
+$history_block
 EOM
 )
 
@@ -144,8 +153,10 @@ EOM
   echo "Thinking..."
   LLM_RESPONSE=$(echo "$full_prompt" | claude -p --model "$MODEL" --dangerously-skip-permissions)
 
-  # Append assistant turn to conversation history
-  CONVERSATION_HISTORY+="ASSISTANT: $LLM_RESPONSE"$'\n'
+  # Append assistant turn to conversation history (skip for CODER)
+  if [[ "$ROLE_FILE" != *"CODER"* ]]; then
+    CONVERSATION_HISTORY+="ASSISTANT: $LLM_RESPONSE"$'\n'
+  fi
 
   # --- Parse for task file updates (---BEGIN TASKS.MD--- / ---END TASKS.MD---) ---
   if [[ "$LLM_RESPONSE" == *"---BEGIN TASKS.MD---"* ]]; then
