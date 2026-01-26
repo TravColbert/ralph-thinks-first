@@ -4,89 +4,103 @@
 
 Ralph-Thinks-First (RTF) is a bash-driven agentic framework that formalizes ideation and project definition before execution. Designed around the belief that effective AI agents require clear scope, intent, and task breakdowns—just like human software teams.
 
-RTF consists of two main components:
-1.  **`principal.sh` (Ideation Phase):** A collaborative, interactive CLI session between a human and an LLM to brainstorm a project, define its tasks, and establish clear success parameters for each task. The output is a `TASKS.md` file.
-2.  **`ralph.sh` (Execution Phase):** An agent that automates the completion of the tasks defined in `TASKS.md`.
+RTF uses a single, general-purpose script—`agent.sh`—that adapts its behavior based on a **role file**. Roles define the agent's persona, instructions, and capabilities. A **Manager** role orchestrates the workflow by invoking specialized sub-agents (Architect, Coder, Documentor) as child processes.
 
-This document describes both components.
+> **Note:** The previous `principal.sh` and `ralph.sh` scripts have been deprecated. All functionality is now provided by `agent.sh` with the appropriate role file.
 
 ---
 
-## Ideation with `principal.sh`
+## `agent.sh` — The Unified Agent Runner
 
-The `principal.sh` script is the starting point of the RTF workflow. It facilitates a structured conversation to produce a high-quality `TASKS.md` file.
+`agent.sh` is a general-purpose agent loop. It loads a role definition, reads a task file, and runs an iterative session with an LLM (Claude). Depending on its configuration, it can operate interactively (prompting the user each iteration) or autonomously.
 
 ### How it Works
 
-`principal.sh` is an interactive loop that manages a conversation between you and an LLM (Claude).
-
-1.  **Initialization**: You start the script, optionally providing an initial project idea. The script loads a "meta-prompt" which instructs the LLM on its role as a project manager.
-2.  **Interactive Loop**:
-    *   You provide input (your project idea, answers to questions, etc.).
-    *   The script combines your input, the meta-prompt, and the current `TASKS.md` content into a single prompt for the LLM.
-    *   The LLM responds with both conversational questions and a refined version of the `TASKS.md` file.
-    *   The script automatically updates the `TASKS.md` file and displays the LLM's questions to you.
-3.  **Completion**: The loop continues until you are satisfied with the `TASKS.md` file and end the session by typing `exit` or `quit`.
+1.  **Initialization**: The script loads a role file (`-r`) that defines the agent's persona and instructions, and a task file (`-t`) that provides the work context.
+2.  **Iteration Loop**: Each iteration:
+    *   In `--interactive` mode, the user is prompted for input. In autonomous mode, the agent works from the task file alone.
+    *   The script constructs a prompt combining the role definition, current task file contents, and conversation history.
+    *   The LLM response is parsed for:
+        *   **Task file updates**: Content between `---BEGIN TASKS.MD---` and `---END TASKS.MD---` markers is written back to the task file.
+        *   **Sub-agent invocations**: An `**INVOKE**:` directive triggers a child `agent.sh` process (used by the Manager role).
+        *   **Completion signal**: The text `**AGENT COMPLETE**` ends the session.
+3.  **Termination**: The loop ends when the agent signals completion, the user types `exit`/`quit` (interactive mode), or the maximum iteration count is reached.
 
 ### Usage
 
-To start the ideation session, run the script from your terminal:
-
 ```bash
-./principal.sh
+./agent.sh [OPTIONS]
 ```
 
-You can customize the session with the following options:
-
-*   `-p, --prompt 'TEXT'`: Provide the initial project idea directly.
-*   `-m, --model 'MODEL'`: Specify the Claude model to use (e.g., `claude-3-opus-20240229`).
-*   `-f, --file 'FILE'`: Specify a custom meta-prompt file. Defaults to `META_PROMPT.md`.
-*   `-h, --help`: Show the help message.
-
-The `META_PROMPT.md` file contains the core instructions for the LLM. You can edit this file to change the LLM's behavior, persona, or output format.
+| Option | Description | Default |
+|---|---|---|
+| `-r, --role FILE` | Path to the role file | `MANAGER.md` |
+| `-t, --task FILE` | Path to the task file | `TASKS.md` |
+| `-p, --prompt 'TEXT'` | Initial prompt / instructions | *(none)* |
+| `-m, --model MODEL` | Claude model to use | `sonnet` |
+| `--max-iterations N` | Maximum loop iterations | `10` |
+| `--interactive` | Prompt the user for input each iteration | *(off)* |
+| `-h, --help` | Show help message | |
 
 ---
 
-## Execution with `ralph.sh`
+## Roles
 
-Once `TASKS.md` is finalized, `ralph.sh` takes over to execute the plan.
+Roles are Markdown files that define an agent's behavior. Each role is passed to `agent.sh` via the `-r` flag.
 
-### How it Works
+### Manager (`MANAGER.md`)
 
-1.  **Initialization**: The script reads the `TASKS.md` file.
-2.  **Task Processing Loop**:
-    *   It finds the first unchecked task (`- [ ]`).
-    *   It constructs a prompt for the AI model, instructing it to complete that single task.
-    *   After execution, it marks the task as complete (`- [x]`).
-    *   The loop terminates if all tasks are completed or if the configured maximum number of iterations is reached.
+The orchestrator. The Manager reads the task file, decides which sub-agent to invoke next, and drives the project to completion. It invokes sub-agents using `**INVOKE**:` directives and regains control after each sub-agent finishes.
 
-### Usage for CLI Agents
+Typical workflow: Architect → Coder → Documentor → **AGENT COMPLETE**.
 
-*   **Execute the Plan**: Run `./ralph.sh`.
-*   **Arguments**:
-    *   `--max-iterations N`: Sets the max number of loop iterations (default: 10).
-    *   `--tasks FILE`: Specifies the path to the task file (default: `TASKS.md`).
-    *   `--model MODEL`: Defines which AI model to use.
+### Architect (`ARCHITECT.md`)
+
+Runs interactively (`--interactive`). Interviews the user to refine a project idea into a detailed, actionable task list with clear success parameters. Outputs structured `TASKS.md` content between `---BEGIN TASKS.MD---` / `---END TASKS.MD---` markers.
+
+### Coder (`CODER.md`)
+
+Runs autonomously. Works through unchecked tasks (`- [ ]`) in the task file, completes each one, marks it done (`- [x]`), and signals `**AGENT COMPLETE**` when finished. Conversation history is intentionally omitted to keep prompts focused.
+
+### Documentor (`DOCUMENTOR.md`)
+
+Runs autonomously. Reads a source code file (passed as the task file) and produces Markdown documentation in the `documents/` folder. Flags spurious or questionable code in an `## INVESTIGATE and CLARIFY` section.
+
+---
 
 ## Project Structure
 
-*   `principal.sh`: The interactive script for the ideation phase.
-*   `ralph.sh`: The agent script for the execution phase.
-*   `META_PROMPT.md`: The customizable instruction file for `principal.sh`.
-*   `TASKS.md`: The project plan file, generated by `principal.sh` and consumed by `ralph.sh`.
-*   `README.md`: The main documentation file for the project.
-*   `TASKS.md.example`: An example file showing the expected format for the task list.
+*   `agent.sh`: The unified agent runner script.
+*   `MANAGER.md`: Role file for the project management / orchestration agent.
+*   `ARCHITECT.md`: Role file for the system architect agent.
+*   `CODER.md`: Role file for the coding agent.
+*   `DOCUMENTOR.md`: Role file for the documentation agent.
+*   `TASKS.md`: The project plan file, generated by the Architect and consumed by the Coder.
+*   `documents/`: Output folder for documentation produced by the Documentor.
 
 ## Example Workflow
 
-1.  **Ideate**:
-    ```bash
-    ./principal.sh -p "Create a simple Python web server."
-    ```
-    You interact with the Principal agent until `TASKS.md` is complete.
+The simplest way to run a full project is to start the Manager, which orchestrates the other agents:
 
-2.  **Execute**:
-    ```bash
-    ./ralph.sh
-    ```
-    Ralph takes over and starts working through the tasks in `TASKS.md`.
+```bash
+./agent.sh -r MANAGER.md -t TASKS.md -p "Create a simple Python web server."
+```
+
+The Manager will:
+1.  Invoke the **Architect** (`--interactive`) to interview you and build the task list.
+2.  Invoke the **Coder** to implement each task autonomously.
+3.  Invoke the **Documentor** for each source file produced.
+4.  Signal `**AGENT COMPLETE**` when the project is done.
+
+You can also invoke individual roles directly:
+
+```bash
+# Interactive ideation session
+./agent.sh -r ARCHITECT.md -t TASKS.md --interactive -p "Build a REST API"
+
+# Autonomous coding session
+./agent.sh -r CODER.md -t TASKS.md
+
+# Document a source file
+./agent.sh -r DOCUMENTOR.md -t src/main.py
+```
