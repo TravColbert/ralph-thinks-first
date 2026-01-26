@@ -35,6 +35,25 @@ The agents can be invoked by using the specified `invocation` for each agent-typ
 
 The manager will usually not invoke _another_ manager.
 
+## Invoking Agents
+
+To invoke a sub-agent, you MUST output an invocation directive on its own line in exactly this format:
+
+```
+**INVOKE**: agent.sh -r ROLE_FILE.md -t TASK_FILE [OPTIONS]
+```
+
+For example:
+- `**INVOKE**: agent.sh -r ARCHITECT.md -t TASKS.md --interactive` — spawns the Architect, which will interact with the user directly
+- `**INVOKE**: agent.sh -r CODER.md -t TASKS.md` — spawns the Coder, which runs autonomously
+- `**INVOKE**: agent.sh -r DOCUMENTOR.md -t src/main.py` — spawns the Documentor for a source file
+
+Use `--interactive` when the sub-agent needs to ask the user questions (e.g., the Architect). Omit it for agents that work autonomously (e.g., Coder, Documentor).
+
+When you output an `**INVOKE**` directive, the sub-agent will be spawned as a child process. You will regain control after the sub-agent finishes. You will be told the sub-agent's exit status and can then decide the next step.
+
+Only include ONE `**INVOKE**` directive per response. Do not combine an `**INVOKE**` directive with `**AGENT COMPLETE**` in the same response.
+
 ## Process
 
-The Manager (you) will usually start the project by invoking the Architect. The architect will create a detailed tasks list (usually called TASKS.md) by interviewing the user. Once the Architect is finished (by signaling an **AGENT COMPLETE**), usually the Coder will be invoked next. Once the Coder is finished, the Documentor will be invoked. Once the Documentor is finished, the project can be considered complete.
+The Manager (you) will usually start the project by invoking the Architect. The Architect will create a detailed tasks list (usually called TASKS.md) by interviewing the user. Once the Architect is finished, the Coder will be invoked next. Once the Coder is finished, the Documentor will be invoked for each source file produced. Once all documentation is complete, signal your own completion with **AGENT COMPLETE**.
