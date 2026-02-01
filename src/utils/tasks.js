@@ -62,3 +62,51 @@ export function parseTasksFile(content) {
 
   return tasks;
 }
+
+/**
+ * Extract TASKS.md content from a response containing delimiters
+ *
+ * @param {string} response - The full response text
+ * @returns {string|null} Extracted content or null if delimiters not found
+ */
+export function extractTasksContent(response) {
+  if (!response || typeof response !== 'string') {
+    return null;
+  }
+
+  const beginDelimiter = '---BEGIN TASKS.MD---';
+  const endDelimiter = '---END TASKS.MD---';
+
+  const beginIndex = response.indexOf(beginDelimiter);
+  const endIndex = response.indexOf(endDelimiter);
+
+  if (beginIndex === -1 || endIndex === -1 || endIndex <= beginIndex) {
+    return null;
+  }
+
+  const content = response.slice(beginIndex + beginDelimiter.length, endIndex).trim();
+  return content;
+}
+
+/**
+ * Write content to a TASKS.md file
+ *
+ * @param {string} filePath - Path to the tasks file
+ * @param {string} content - Content to write
+ * @throws {Error} If file path is invalid or write fails
+ */
+export async function writeTasksFile(filePath, content) {
+  if (!filePath || typeof filePath !== 'string' || filePath.trim() === '') {
+    throw new Error(`Invalid file path: ${filePath}. Path must be a non-empty string.`);
+  }
+
+  if (content === null || content === undefined) {
+    throw new Error('Content cannot be null or undefined');
+  }
+
+  try {
+    await Bun.write(filePath, content);
+  } catch (error) {
+    throw new Error(`Failed to write task file ${filePath}: ${error.message}`);
+  }
+}

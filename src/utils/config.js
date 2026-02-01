@@ -13,7 +13,8 @@ const DEFAULT_CONFIG = {
   maxIterations: 10,
   tasksFile: "TASKS.md",
   configFile: ".rtfrc.json",
-  claudeCommand: "claude"
+  claudeCommand: "claude",
+  skipPermissions: false
 };
 
 /**
@@ -95,6 +96,11 @@ function loadEnvConfig() {
     config.claudeCommand = process.env.RTF_CLAUDE_COMMAND;
   }
 
+  if (process.env.RTF_SKIP_PERMISSIONS) {
+    const val = process.env.RTF_SKIP_PERMISSIONS.toLowerCase();
+    config.skipPermissions = val === "true" || val === "1" || val === "yes";
+  }
+
   return config;
 }
 
@@ -127,6 +133,10 @@ function cliArgsToConfig(cliArgs) {
 
   if (cliArgs.role !== undefined && cliArgs.role !== null) {
     config.role = cliArgs.role;
+  }
+
+  if (cliArgs.skipPermissions !== undefined && cliArgs.skipPermissions !== null) {
+    config.skipPermissions = cliArgs.skipPermissions;
   }
 
   return config;

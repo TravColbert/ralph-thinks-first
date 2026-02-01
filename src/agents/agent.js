@@ -83,6 +83,7 @@ function buildPrompt(rolePrompt, tasksContent, config) {
   prompt = prompt.replace(/\$TASKS_FILE/g, config.tasksFile || "TASKS.md");
   prompt = prompt.replace(/\$MAX_ITERATIONS/g, String(config.maxIterations || 10));
   prompt = prompt.replace(/\$CURRENT_ITERATION/g, String(config.currentIteration || 1));
+  prompt = prompt.replace(/\$INITIAL_PROMPT/g, config.initialPrompt || "(No project description provided)");
 
   // Add TASKS.md content if available
   if (tasksContent.trim()) {
@@ -131,6 +132,11 @@ export async function spawnAgent(role, config) {
   // Add model if specified
   if (config.model) {
     args.push("--model", config.model);
+  }
+
+  // Add permission bypass if configured
+  if (config.skipPermissions) {
+    args.push("--dangerously-skip-permissions");
   }
 
   // Spawn the process with the prompt as stdin

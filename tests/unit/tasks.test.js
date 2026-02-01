@@ -1,5 +1,6 @@
-import { describe, test, expect } from "bun:test";
-import { readTasksFile, parseTasksFile } from "../../src/utils/tasks.js";
+import { describe, test, expect, afterEach } from "bun:test";
+import { readTasksFile, parseTasksFile, extractTasksContent, writeTasksFile } from "../../src/utils/tasks.js";
+import { unlink } from "node:fs/promises";
 
 describe("readTasksFile", () => {
   test("should read existing TASKS.md file", async () => {
@@ -108,5 +109,182 @@ describe("parseTasksFile", () => {
     expect(tasks[1].description).toBe("Second");
     expect(tasks[2].description).toBe("Third");
     expect(tasks[3].description).toBe("Fourth");
+  });
+});
+
+describe("extractTasksContent", () => {
+  test("should extract content between delimiters", () => {
+    const response = `Some analysis here...
+
+---BEGIN TASKS.MD---
+# Tasks
+- [ ] Task 1
+- [ ] Task 2
+---END TASKS.MD---
+
+**AGENT COMPLETE**`;
+
+    const content = extractTasksContent(response);
+    expect(content).toBe("# Tasks\n- [ ] Task 1\n- [ ] Task 2");
+  });
+
+  test("should return null when no delimiters found", () => {
+    const response = "Just some text without delimiters";
+    const content = extractTasksContent(response);
+    expect(content).toBeNull();
+  });
+
+  test("should return null when only begin delimiter found", () => {
+    const response = "---BEGIN TASKS.MD---\nSome content";
+    const content = extractTasksContent(response);
+    expect(content).toBeNull();
+  });
+
+  test("should return null when only end delimiter found", () => {
+    const response = "Some content\n---END TASKS.MD---";
+    const content = extractTasksContent(response);
+    expect(content).toBeNull();
+  });
+
+  test("should return null when delimiters are in wrong order", () => {
+    const response = "---END TASKS.MD---\nContent\n---BEGIN TASKS.MD---";
+    const content = extractTasksContent(response);
+    expect(content).toBeNull();
+  });
+
+  test("should handle empty content between delimiters", () => {
+    const response = "---BEGIN TASKS.MD---\n---END TASKS.MD---";
+    const content = extractTasksContent(response);
+    expect(content).toBe("");
+  });
+
+  test("should trim whitespace from extracted content", () => {
+    const response = "---BEGIN TASKS.MD---\n\n  # Tasks  \n\n---END TASKS.MD---";
+    const content = extractTasksContent(response);
+    expect(content).toBe("# Tasks");
+  });
+
+  test("should handle null input", () => {
+    const content = extractTasksContent(null);
+    expect(content).toBeNull();
+  });
+
+  test("should handle undefined input", () => {
+    const content = extractTasksContent(undefined);
+    expect(content).toBeNull();
+  });
+
+  test("should handle empty string input", () => {
+    const content = extractTasksContent("");
+    expect(content).toBeNull();
+  });
+
+  test("should handle non-string input", () => {
+    const content = extractTasksContent(123);
+    expect(content).toBeNull();
+  });
+
+  test("should preserve multiline content", () => {
+    const response = `---BEGIN TASKS.MD---
+# Project Tasks
+
+## Phase 1
+- [ ] Task A
+- [ ] Task B
+
+## Phase 2
+- [ ] Task C
+---END TASKS.MD---`;
+
+    const content = extractTasksContent(response);
+    expect(content).toContain("# Project Tasks");
+    expect(content).toContain("## Phase 1");
+    expect(content).toContain("## Phase 2");
+    expect(content).toContain("- [ ] Task A");
+    expect(content).toContain("- [ ] Task C");
+  });
+});
+
+describe("writeTasksFile", () => {
+  const testFilePath = "tests/fixtures/test-write-tasks.md";
+
+  afterEach(async () => {
+    // Clean up test file after each test
+    try {
+      await unlink(testFilePath);
+    } catch {
+      // File may not exist, ignore
+    }
+  });
+
+  test("should write content to file", async () => {
+    const content = "# Test Tasks\n- [ ] Task 1";
+    await writeTasksFile(testFilePath, content);
+
+    const file = Bun.file(testFilePath);
+    const writtenContent = await file.text();
+    expect(writtenContent).toBe(content);
+  });
+
+  test("should overwrite existing file", async () => {
+    const initialContent = "# Initial\n- [ ] Old task";
+    const newContent = "# Updated\n- [ ] New task";
+
+    await writeTasksFile(testFilePath, initialContent);
+    await writeTasksFile(testFilePath, newContent);
+
+    const file = Bun.file(testFilePath);
+    const writtenContent = await file.text();
+    expect(writtenContent).toBe(newContent);
+  });
+
+  test("should write empty string", async () => {
+    await writeTasksFile(testFilePath, "");
+
+    const file = Bun.file(testFilePath);
+    const writtenContent = await file.text();
+    expect(writtenContent).toBe("");
+  });
+
+  test("should throw error for null path", async () => {
+    await expect(writeTasksFile(null, "content")).rejects.toThrow("Invalid file path");
+  });
+
+  test("should throw error for undefined path", async () => {
+    await expect(writeTasksFile(undefined, "content")).rejects.toThrow("Invalid file path");
+  });
+
+  test("should throw error for empty string path", async () => {
+    await expect(writeTasksFile("", "content")).rejects.toThrow("Invalid file path");
+  });
+
+  test("should throw error for whitespace-only path", async () => {
+    await expect(writeTasksFile("   ", "content")).rejects.toThrow("Invalid file path");
+  });
+
+  test("should throw error for null content", async () => {
+    await expect(writeTasksFile(testFilePath, null)).rejects.toThrow("Content cannot be null or undefined");
+  });
+
+  test("should throw error for undefined content", async () => {
+    await expect(writeTasksFile(testFilePath, undefined)).rejects.toThrow("Content cannot be null or undefined");
+  });
+
+  test("should preserve special characters", async () => {
+    const content = "# Tasks\n- [ ] Handle `code` and **bold**\n- [ ] Special chars: <>&\"'";
+    await writeTasksFile(testFilePath, content);
+
+    const file = Bun.file(testFilePath);
+    const writtenContent = await file.text();
+    expect(writtenContent).toBe(content);
+  });
+
+  test("should preserve unicode characters", async () => {
+    const content = "# Tasks 📋\n- [ ] Task with emoji 🎉\n- [ ] Unicode: áéíóú ñ 中文";
+    await writeTasksFile(testFilePath, content);
+
+    const file = Bun.file(testFilePath);
+    const writtenContent = await file.text();
+    expect(writtenContent).toBe(content);
   });
 });

@@ -2,7 +2,7 @@
  * CLI Argument Parser
  *
  * Parses command-line arguments for the Ralph-Thinks-First CLI.
- * Supports flags: --config, --model, --max-iterations, --tasks, --role
+ * Supports flags: --config, --model, --max-iterations, --tasks, --role, --prompt
  */
 
 /**
@@ -11,15 +11,7 @@
  * @returns {object} Parsed arguments object with keys: config, model, maxIterations, tasks, role
  */
 export function parseArgs(argv) {
-  const args = {
-    config: null,
-    model: null,
-    maxIterations: null,
-    tasks: null,
-    role: null,
-    help: false,
-    version: false
-  };
+  const args = {};
 
   // Skip first two arguments (interpreter and script path) if present
   // Bun.argv already excludes them, but process.argv includes them
@@ -73,6 +65,17 @@ export function parseArgs(argv) {
     // Parse --version
     else if (arg === '--version' || arg === '-v') {
       args.version = true;
+    }
+    // Parse --prompt <text>
+    else if (arg === '--prompt' || arg === '-p') {
+      if (i + 1 < argv.length) {
+        args.prompt = argv[i + 1];
+        i++; // Skip next argument
+      }
+    }
+    // Parse --skip-permissions (boolean flag)
+    else if (arg === '--skip-permissions' || arg === '--dangerously-skip-permissions') {
+      args.skipPermissions = true;
     }
   }
 
