@@ -22,11 +22,11 @@
     "automation",
     "cli"
   ],
-  "author": "Ralph-Thinks-First Contributors",
+  "author": "Trav Colbert",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/ralph-thinks-first"
+    "url": "https://github.com/TravColbert/ralph-thinks-first"
   },
   "files": [
     "src/",
