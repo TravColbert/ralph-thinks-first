@@ -1,0 +1,36 @@
+{
+  "name": "ralph-thinks-first",
+  "version": "0.1.0",
+  "description": "Ralph-Thinks-First: An agentic AI framework for task orchestration using Claude",
+  "type": "module",
+  "bin": {
+    "ralph-thinks-first": "./src/index.js"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "scripts": {
+    "test": "bun test",
+    "test:unit": "bun test tests/unit/",
+    "test:integration": "bun test tests/integration/"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "claude",
+    "orchestration",
+    "automation",
+    "cli"
+  ],
+  "author": "Ralph-Thinks-First Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ralph-thinks-first"
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ]
+}

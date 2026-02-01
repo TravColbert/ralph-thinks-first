@@ -1,0 +1,40 @@
+# Test files
+tests/
+*.test.js
+
+# Development files
+.git/
+.gitignore
+node_modules/
+
+# Old bash scripts
+agent.sh
+principal.sh
+ralph.sh
+
+# Local configuration
+.rtfrc.json
+TASKS.md
+TASKS.md.backup
+TASKS.md.backup2
+TASKS.md.example
+
+# Documentation (keep only essential docs)
+AGENTS.md
+ARCHITECT.md
+CODER.md
+DOCUMENTOR.md
+MANAGER.md
+META_PROMPT.md
+
+# Build and development artifacts
+*.log
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.iml
