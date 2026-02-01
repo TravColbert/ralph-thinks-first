@@ -8,7 +8,7 @@
  */
 
 import { parseArgs } from './utils/cli.js';
-import { loadConfig } from './config.js';
+import { loadConfig } from './utils/config.js';
 import { loadRole } from './utils/roles.js';
 import { readTasksFile } from './utils/tasks.js';
 import { spawnAgent } from './agents/agent.js';

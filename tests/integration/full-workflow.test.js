@@ -1,7 +1,7 @@
 import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test";
 import { spawnAgent } from "../../src/agents/agent.js";
 import { parseArgs } from "../../src/utils/cli.js";
-import { loadConfig } from "../../src/config.js";
+import { loadConfig } from "../../src/utils/config.js";
 import { readTasksFile } from "../../src/utils/tasks.js";
 import { join } from "path";
 
@@ -44,7 +44,7 @@ describe("Full Workflow Integration Test", () => {
         write: mock((data) => {
           stdin += data;
         }),
-        end: mock(() => {})
+        end: mock(() => { })
       };
 
       // Read stdin to determine the role
