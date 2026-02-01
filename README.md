@@ -44,10 +44,17 @@ npx ralph-thinks-first
 ```
 
 The manager will:
-1. Read your `TASKS.md` file
-2. Analyze the tasks
-3. Orchestrate planning, coding, and documentation agents
-4. Execute tasks until completion or max iterations reached
+1. Prompt you for a project description: "What would you like to build?"
+2. Read or create your `TASKS.md` file
+3. Analyze the tasks
+4. Orchestrate planning, coding, and documentation agents
+5. Execute tasks until completion or max iterations reached
+
+Alternatively, provide the project description directly via the `-p` flag:
+
+```bash
+npx ralph-thinks-first --prompt "Build a REST API for user management"
+```
 
 Run a specific role directly:
 
@@ -96,6 +103,7 @@ npx ralph-thinks-first [options]
 
 | Flag | Description | Default |
 |------|-------------|---------|
+| `--prompt, -p <text>` | Provide an initial project description | Interactive prompt if not provided |
 | `--role <name>` | Specify which agent role to run | `manage` |
 | `--tasks <path>` | Path to tasks file | `TASKS.md` |
 | `--model <model>` | Claude model to use | `claude-sonnet-4-5` |
