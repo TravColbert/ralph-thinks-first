@@ -19,17 +19,6 @@ const __dirname = dirname(__filename);
 const VALID_ROLES = ["manage", "plan", "code", "document"];
 
 /**
- * Maps role names to their legacy .md file equivalents
- * This allows backwards compatibility with existing role files
- */
-const ROLE_FILE_MAP = {
-  manage: "MANAGER.md",
-  plan: "ARCHITECT.md",
-  code: "CODER.md",
-  document: "DOCUMENTOR.md"
-};
-
-/**
  * Loads a role meta-prompt from the appropriate file
  *
  * @param {string} role - Role name (manage, plan, code, document)
@@ -56,17 +45,6 @@ async function loadRolePrompt(role) {
     }
   } catch (error) {
     // New role file doesn't exist or failed to load, fall back to legacy .md files
-  }
-
-  // Fall back to legacy .md files in project root
-  const legacyFileName = ROLE_FILE_MAP[normalizedRole];
-  const legacyRolePath = join(process.cwd(), legacyFileName);
-
-  try {
-    const file = Bun.file(legacyRolePath);
-    const content = await file.text();
-    return content;
-  } catch (error) {
     throw new Error(`Failed to load role prompt for '${role}': ${error.message}`);
   }
 }
